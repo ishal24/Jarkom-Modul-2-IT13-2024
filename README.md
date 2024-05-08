@@ -349,9 +349,11 @@ jalankan apache2
 service apache2 start
 ```
 cek status apache
+
 ![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/blob/main/img/apache.png)
 
 - **akses website dati GatkaTrenches**
+
 install lynx
 ```bash
 apt-get install lynx
@@ -363,26 +365,275 @@ lynx http://10.70.2.3/index.php
 ![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/blob/main/img/apache2.png)
 
 
-## 13. 
+## 13. Buat Severny, Stalber, Lipovka sebagai worker dan Mylta sebagai Load Balancer
+- **Load Balancer**
+buat script setup.sh dan masukan script berikut, kemudian jalankan
+```bash
+#!/bin/bash
+echo nameserver 192.168.122.1 >> /etc/resolv.conf
+
+apt-get update
+apt-get install -y nginx mcedit apache2 php lynx
+apt-get install libapache2-mod-php7.0 -y
+
+a2enmod proxy
+a2enmod proxy_http
+a2enmod proxy_balancer
+a2enmod lbmethod_byrequests
+
+service apache2 restart
+
+rm /var/www/html/index.html
+
+cat <<EOF >> /etc/apache2/sites-available/load-balancer.conf
+<VirtualHost *:80>
+    ServerName mylta.example.com
+
+    <Proxy balancer://mycluster>
+        BalancerMember http://10.70.2.2  # Severny
+        BalancerMember http://10.70.2.3  # Stalber
+        BalancerMember http://10.70.2.4  # Lipovka
+    </Proxy>
+    
+    ProxyPreserveHost On
+    ProxyPass / balancer://mycluster/
+    ProxyPassReverse / balancer://mycluster/
+
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/html
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+EOF
+
+service apache2 restart
+```
+- **testing**
+
+![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/blob/main/img/lipovka_lb.png)
+
+![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/blob/main/img/stalber_lb.png)
 
 
-## 14. 
+## 14. Ubah web server dan load balancer menjadi nginx
+- **laod balancer**
+buat script baru untuk nginx load balancer
+```bash
+service apache2 stop
+apt-get update
+apt-get install nginx -y
+echo "upstream loadbalancer {
+  server 10.70.2.2; # Stalber
+  server 10.70.2.3; # Severny
+  server 10.70.2.4; # Lipovka
+}
 
+server {
+  listen 80;
+  server_name mylta.it13.com www.mylta.it13.com;
 
-## 15. 
+  location / {
+    proxy_pass http://loadbalancer;
+  }
+}
+" > /etc/nginx/sites-available/load_balancer
 
+ln -s /etc/nginx/sites-available/load_balancer /etc/nginx/sites-enabled/load_balancer
 
-## 16. 
+rm /etc/nginx/sites-enabled/default
 
+service nginx restart
+```
 
-## 17. 
+- **worker**
+buat script baru untuk nginx worker
+```bash
+service apache2 stop
 
+apt-get update
+apt-get install nginx -y
+apt install php php-fpm php-mysql -y
+mkdir /var/www/worker
+cp /root/lb/worker/index.php /var/www/worker/index.php
 
-## 18. 
+service php7.0-fpm start
 
+echo -e "server {
+        listen 80;
 
-## 19. 
+        root /var/www/worker;
+        index index.php index.html index.htm index.nginx-debian.html;
 
+        server_name _;
 
-## 20.
+        location / {
+                try_files $uri $uri/ /index.php?$query_string;
+        }
 
+        location ~ \.php$ {
+                include snippets/fastcgi-php.conf;
+                fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;
+        }
+
+        location ~ /\.ht {
+                deny all;
+        }
+}" > /etc/nginx/sites-available/worker
+
+ln -s /etc/nginx/sites-available/worker /etc/nginx/sites-enabled/worker
+
+rm /etc/nginx/sites-enabled/default
+
+service nginx restart
+```
+
+- **testing**
+![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/blob/main/img/stalber_nginx.png)
+
+![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/blob/main/img/lipovka_nginx.png)
+
+## 16. Buat mylta.xxx.com dengan alias www.mylta.xxx.com
+- Buka pochinki, edit file /etc/bind/named.conf.local, tambahkan script ini
+```bash
+zone "mylta.it13.com" {  
+    type master;  
+    file "/etc/bind/mylta/mylta.it13.com";
+};
+```
+```bash
+;
+; BIND data file for local loopback interface
+;
+$TTL    604800
+@       IN      SOA     mylta.it13.com. root.mylta.it13.com. (
+                              2         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@       IN      NS      mylta.it13.com.
+@       IN      A       10.70.2.5	; IP Mylta
+@       IN      AAAA    ::1
+www	    IN	    CNAME	mylta.it13.com.
+```
+
+- **testing**
+![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/blob/main/img/mylta.png)
+
+## 17. Konfigurasi agar mylta.xxx.com hanya dapat diakses melalui port 14000 dan 14400
+- **laod balancer**
+buat script baru untuk nginx load balancer
+```bash
+service apache2 stop
+apt-get update
+apt-get install nginx -y
+echo "upstream loadbalancer {
+  server 10.70.2.2; # Stalber
+  server 10.70.2.3; # Severny
+  server 10.70.2.4; # Lipovka
+}
+
+server {
+  listen 14000;
+  listen 14400;
+  server_name mylta.it13.com www.mylta.it13.com;
+
+  location / {
+    proxy_pass http://loadbalancer;
+  }
+}
+" > /etc/nginx/sites-available/load_balancer
+
+ln -s /etc/nginx/sites-available/load_balancer /etc/nginx/sites-enabled/load_balancer
+
+rm /etc/nginx/sites-enabled/default
+
+service nginx restart
+```
+
+- **worker**
+```bash
+service apache2 stop
+
+apt-get update
+apt-get install nginx -y
+apt install php php-fpm php-mysql -y
+mkdir /var/www/worker
+cp /root/lb/worker/index.php /var/www/worker/index.php
+
+service php7.0-fpm start
+
+echo -e "server {
+        listen 14000;
+        listen 14400;
+
+        root /var/www/worker;
+        index index.php index.html index.htm index.nginx-debian.html;
+
+        server_name _;
+
+        location / {
+                try_files $uri $uri/ /index.php?$query_string;
+        }
+
+        location ~ \.php$ {
+                include snippets/fastcgi-php.conf;
+                fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;
+        }
+
+        location ~ /\.ht {
+                deny all;
+        }
+}" > /etc/nginx/sites-available/worker
+
+ln -s /etc/nginx/sites-available/worker /etc/nginx/sites-enabled/worker
+
+rm /etc/nginx/sites-enabled/default
+
+service nginx restart
+```
+
+## 18. Akses IP mylta dialihkan ke www.mylta.xxx.com
+pada mylta, buka file /etc/apache2/sites-available/000-default.conf, kemudian edit
+```bash
+<VirtualHost *:80>
+    ServerAdmin webmaster@mylta.it13.com
+    DocumentRoot /var/www/html
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+    Redirect / http://www.mylta.it13.com/
+</VirtualHost>
+```
+
+## 20. Worker tersebut harus dapat di akses dengan tamat.xxx.com dengan alias www.tamat.xxx.com
+- pada Pochinki, buka /etc/bind/named.conf.local, kemudian tambah script berikut
+```bash
+zone "tamat.it13.com" {  
+    type master;  
+    file "/etc/bind/tamat/tamat.it13.com";
+};
+```
+kemudian buka
+```bash
+;
+; BIND data file for local loopback interface
+;
+$TTL    604800
+@       IN      SOA     tamat.it13.com. root.tamat.it13.com. (
+                              2         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@       IN      NS      tamat.it13.com.
+@       IN      A       10.70.2.3
+@       IN      AAAA    ::1
+www	    IN	    CNAME	tamat.it13.com.
+```
+
+# Terima kasih telah membaca, semoga masuk surga aamiin....🙏
