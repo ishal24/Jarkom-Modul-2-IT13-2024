@@ -1,5 +1,5 @@
 # Lapres Praktikum Jaringan Komputer Modul-2 IT13
-- anggota
+- Anggota Kelompok
 
 | Nama                   | NRP          |
 | ---------------------- | ------------ |
@@ -243,19 +243,19 @@ EOF
 ## 7. Buat DNS Slave di Georgopol untuk semua domain yang sudah dibuat sebelumnya
 
 
-## 8. 
+## 8. Buat subdomain medkit.airdrop.xxxx.com yang mengarah ke Lipovka
 
 
-## 9. 
+## 9. Buat subdomain siren.redzone.xxxx.com dengan delegasi Georgopol yang mengarah ke Severny
 
 
-## 10. 
+## 10. Buat subdomain log dari subdomain log.siren.redzone.xxxx.com dengan IP ke Severny
 
 
-## 11. 
+## 11. Melakukan forwarding dimana hanya Pochinki yang dapat mengakses jaringan luar secara langsung
 
 
-## 12.
+## 12. Melakukan deploy website dari Severny menggunakan apache web server
 
 
 ## 13. 
