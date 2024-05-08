@@ -1,9 +1,9 @@
 # Lapres Praktikum Jaringan Komputer Modul-2 IT13
 - anggota
-|Nama           | NRP       |
-|---------------|-----------|
-|Muhammad Faishal Rizqy | 5027221026    |
-|Rafif Dhimaz Ardhana   | 5027221026    |
+| Nama                   | NRP          |
+| ---------------------- | ------------ |
+| Muhammad Faishal Rizqy | `5027221026` |
+| Rafif Dhimaz Ardhana   | `5027221066` |
 
 ## 1. Membuat rancangan topologi
 **Topologi:**
