@@ -7,7 +7,7 @@
 
 ## 1. Membuat rancangan topologi
 **Topologi:**
-![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/img/topology.png)
+![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/blob/main/img/topology.png)
 
 **IP Configuration:**
 - Erangel
@@ -200,13 +200,13 @@ EOF
 ```bash setup.sh```
 - ping domain-domain yang telah dibuat dari client lain 
 run command berikut sebelum melakukan test
-![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/img/test_ping.png)
+![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/blob/main/img/test_ping.png)
 - ***airdrop***
-![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/img/test_ping_airdrop.png)
+![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/blob/main/img/test_ping_airdrop.png)
 - ***redzone***
-![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/img/test_ping_redzone.png)
+![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/blob/main/img/test_ping_redzone.png)
 - ***loot***
-![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/img/test_ping_loot.png)
+![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/blob/main/img/test_ping_loot.png)
 
 bisa dilihat bahwa ketiga domain tersebut sudah bisa diakses dari client lain yang berada di Erangel
 
