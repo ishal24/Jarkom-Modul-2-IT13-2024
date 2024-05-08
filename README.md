@@ -241,21 +241,126 @@ EOF
 ```
 
 ## 7. Buat DNS Slave di Georgopol untuk semua domain yang sudah dibuat sebelumnya
+- **DNS Master (Pochinki)**
+buka file /etc/bind/named.conf.local, dan ubah bagian dibawah ini,
+![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/blob/main/img/master.png)
+edit script tersebut menjadi seperti ini
+```bash
+zone "airdrop.it13.com" {
+    type master;
+    notify yes;
+    also-notify { 10.70.1.5; };
+    allow-transfer { 10.70.1.5; };
+    file "/etc/bind/airdrop/airdrop.it13.com";
+};
+zone "redzone.it13.com" {
+    type master;
+    notify yes;
+    also-notify { 10.70.1.5; };
+    allow-transfer { 10.70.1.5; };
+    file "/etc/bind/redzone/redzone.it13.com";
+};
+zone "loot.it13.com" {
+    type master;
+    notify yes;
+    also-notify { 10.70.1.5; };
+    allow-transfer { 10.70.1.5; };
+    file "/etc/bind/loot/loot.it13.com";
+};
+```
+
+- **DNS Slave (Georgopol)**
+buka /etc/bind/named.conf.local dan tambahkan script berikut
+```bash
+zone "airdrop.it13.com" {
+    type slave;
+    masters { 10.70.1.2; };
+    file "/var/lib/bind/airdrop.it13.com";
+};
+
+zone "redzone.it13.com" {
+    type slave;
+    masters { 10.70.1.2; };
+    file "/var/lib/bind/redzone.it13.com";
+};
+
+zone "loot.it13.com" {
+    type slave;
+    masters { 10.70.1.2; };
+    file "/var/lib/bind/loot.it13.com";
+};
+```
+
+- **Test**
+ubah nameserver pada client menjadi 10.70.1.2 (Pochinki) dan 10.70.1.5 (Georgopol), kemudian coba ping salah satu domain
+![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/blob/main/img/slave.png)
 
 
 ## 8. Buat subdomain medkit.airdrop.xxxx.com yang mengarah ke Lipovka
-
+buka file airdrop.it13.com, kemudian tambahkan script berikun dibawah.
+```bash
+medkit  IN      A       10.70.2.4	; IP Lipovka
+www.medkit  IN  CNAME   medkit.airdrop.it13.com
+```
 
 ## 9. Buat subdomain siren.redzone.xxxx.com dengan delegasi Georgopol yang mengarah ke Severny
-
+buka file redzone.it13.com, kemudian tambahkan script berikun dibawah.
+```bash
+siren   IN      A       10.70.2.3       ; IP Severny
+www.siren       IN      CNAME   siren.redzone.it13.com.
+```
 
 ## 10. Buat subdomain log dari subdomain log.siren.redzone.xxxx.com dengan IP ke Severny
-
+buka file redzone.it13.com, kemudian tambahkan script berikun dibawah.
+```bash
+log.siren       IN      A       10.70.2.3       ; IP Severny
+www.log.siren   IN      CNAME   log.siren.redzone.it13.com.
+```
 
 ## 11. Melakukan forwarding dimana hanya Pochinki yang dapat mengakses jaringan luar secara langsung
+- **menambah forwarders pada Pochinki**
+buka /etc/bind/named.conf.options, kemudian tambahkan bagian ini
+```bash
+        forwarders {
+		      192.168.122.1;
+        };
+```
+![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/blob/main/img/forward.png)
+
+- **cek ip forwarder**
+pertama, ganti nameserver pada client menjadi IP Pochinki (10.70.1.3)
+kemudian coba ping google dari client
+![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/blob/main/img/forward2.png)
 
 
 ## 12. Melakukan deploy website dari Severny menggunakan apache web server
+- **setup website di severny**
+jalankan script berikut pada severny
+```bash
+echo nameserver 192.168.122.1 >> /etc/resolv.conf
+apt-get install -y nginx mcedit apache2 php libapache2-mod-php7.0
+```
+kemudian copy index.php ke /var/www/html/
+```bash
+cp index.php /var/www/html/
+```
+jalankan apache2
+```bash
+service apache2 start
+```
+cek status apache
+![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/blob/main/img/apache.png)
+
+- **akses website dati GatkaTrenches**
+install lynx
+```bash
+apt-get install lynx
+```
+akses website
+```bash
+lynx http://10.70.2.3/index.php
+```
+![Alt text](https://github.com/ishal24/Jarkom-Modul-2-IT13-2024/blob/main/img/apache2.png)
 
 
 ## 13. 
